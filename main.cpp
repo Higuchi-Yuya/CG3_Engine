@@ -15,14 +15,14 @@
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
 #include <vector>
-
+#include <wrl.h>
 
 #include <math.h>
 #include "Mesh.h"
+#include "Render_basic.h"
 
 
-
-
+using namespace Microsoft::WRL;
 using namespace std;
 
 
@@ -112,9 +112,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #endif
 
 	HRESULT result;
-	ID3D12Device* device = nullptr;
-	IDXGIFactory6* dxgiFactory = nullptr;
-	IDXGISwapChain4* swapChain = nullptr;
+	ComPtr<ID3D12Device> device = nullptr;
+	ComPtr<IDXGIFactory6> dxgiFactory = nullptr;
+	ComPtr<IDXGISwapChain4> swapChain = nullptr;
 	ID3D12CommandAllocator* commandAllocator = nullptr;
 	ID3D12GraphicsCommandList* commandList = nullptr;
 	ID3D12CommandQueue* commandQueue = nullptr;
@@ -125,7 +125,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(result));
 
 	//アダプターの列挙用
-	std::vector<IDXGIAdapter4*>adapters;
+	std::vector<ComPtr<IDXGIAdapter4>>adapters;
 	//ここに特定の名前を持つアダプターオブジェクトが入る
 	IDXGIAdapter4* tmpAdapter = nullptr;
 
@@ -143,7 +143,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//ソフトウェアデバイスを回避
 		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
 			//デバイスを採用してループを抜ける
-			tmpAdapter = adapters[i];
+			tmpAdapter = adapters[i].Get();
 			break;
 		}
 	}
@@ -193,9 +193,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	swapChainDesc.BufferCount = 2;								//バッファ数を2つに設定
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;	//フリップ後は破壊
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	
 	//スワップチェーンの生成
-	result = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, (IDXGISwapChain1**)&swapChain);
+	ComPtr<IDXGISwapChain1> swapChain1;
+
+	result = dxgiFactory->CreateSwapChainForHwnd(
+		commandQueue,
+		hwnd, 
+		&swapChainDesc, 
+		nullptr, 
+		nullptr, 
+		&swapChain1);
+
+	//生成下IDXGISwapChain1のオブジェクトをIDXGISwapChain4に変換する
+	swapChain1.As(&swapChain);
+
 	assert(SUCCEEDED(result));
+
 
 	//デスクリプタヒープの設定
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
@@ -206,7 +220,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap));
 
 	//バックバッファ
-	std::vector<ID3D12Resource*>backBuffers;
+	std::vector<ComPtr<ID3D12Resource>>backBuffers;
 	backBuffers.resize(swapChainDesc.BufferCount);
 
 	//スワップチェーンの全てのバッファについて処理する
@@ -223,7 +237,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 		//レンダーターゲットビューの生成
-		device->CreateRenderTargetView(backBuffers[i], &rtvDesc, rtvHandle);
+		device->CreateRenderTargetView(backBuffers[i].Get(), &rtvDesc, rtvHandle);
 	}
 
 	//フェンスの生成
@@ -255,90 +269,191 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///////////////////////////////////////////////////////
 #pragma endregion
 
+	Render_basic::GetInstance()->Initialization(device.Get());
+
+	//リソース設定
+	D3D12_RESOURCE_DESC depthResoureDesc{};
+	depthResoureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthResoureDesc.Width = window_width;
+	depthResoureDesc.Height = window_height;
+	depthResoureDesc.DepthOrArraySize = 1;
+	depthResoureDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthResoureDesc.SampleDesc.Count = 1;
+	depthResoureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	//深度値用ヒーププロパティ
+	D3D12_HEAP_PROPERTIES depthHeapProp{};
+	depthHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+	//深度値のクリア設定
+	D3D12_CLEAR_VALUE depthClearValue{};
+	depthClearValue.DepthStencil.Depth = 1.0f;
+	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+
+	//リソース生成
+	ID3D12Resource* depthBuff = nullptr;
+	result = device->CreateCommittedResource(
+		&depthHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&depthResoureDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(&depthBuff));
+
+	//深度ビュー用デスクリプタヒープ作成
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	ID3D12DescriptorHeap* dsvHeap = nullptr;
+	result = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap));
+
+
+	//深度ビュー作成
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	device->CreateDepthStencilView(
+		depthBuff,
+		&dsvDesc,
+		dsvHeap->GetCPUDescriptorHandleForHeapStart()
+	);
+
 	Mesh mesh[10];
 
 	Mesh::Vertex vertices[] = {
-		// x      y     z       u     v
-		{{-0.12f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-0.12f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{+0.12f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{+0.12f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+		// x      y      z       u      v
+		//前
+		{{-5.0f, -5.0f, -5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f,  5.0f, -5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f, -5.0f, -5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f,  5.0f, -5.0f}, {1.0f, 0.0f}}, // 右上
+	
+		//後
+		{{-5.0f, -5.0f,  5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f,  5.0f,  5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f, -5.0f,  5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f,  5.0f,  5.0f}, {1.0f, 0.0f}}, // 右上
+
+		//左
+		{{-5.0f, -5.0f, -5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f, -5.0f,  5.0f}, {0.0f, 0.0f}}, // 左上
+		{{-5.0f,  5.0f, -5.0f}, {1.0f, 1.0f}}, // 右下
+		{{-5.0f,  5.0f,  5.0f}, {1.0f, 0.0f}}, // 右上
+
+		//右
+		{{ 5.0f, -5.0f, -5.0f}, {0.0f, 1.0f}}, // 左下
+		{{ 5.0f, -5.0f,  5.0f}, {0.0f, 0.0f}}, // 左上
+		{{ 5.0f,  5.0f, -5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f,  5.0f,  5.0f}, {1.0f, 0.0f}}, // 右上
+
+		//下
+		{{-5.0f, -5.0f, -5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f, -5.0f,  5.0f}, {0.0f, 1.0f}}, // 左上
+		{{ 5.0f, -5.0f, -5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f, -5.0f,  5.0f}, {1.0f, 1.0f}}, // 右上
+
+		//上
+		{{-5.0f,  5.0f, -5.0f}, {0.0f, 1.0f}}, // 左下
+		{{-5.0f,  5.0f,  5.0f}, {0.0f, 1.0f}}, // 左上
+		{{ 5.0f,  5.0f, -5.0f}, {1.0f, 1.0f}}, // 右下
+		{{ 5.0f,  5.0f,  5.0f}, {1.0f, 1.0f}}, // 右上
 	};
 
-	Mesh::Vertex vertices2[] = {
-		// x      y     z       u     v
-		{{-0.24f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-0.24f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{-0.12f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{-0.12f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices2[] = {
+	//	// x      y     z       u     v
+	//	{{-0.24f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{-0.24f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{-0.12f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{-0.12f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices3[] = {
-		// x      y     z       u     v
-		{{-0.42f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-0.42f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{-0.32f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{-0.32f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices3[] = {
+	//	// x      y     z       u     v
+	//	{{-0.42f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{-0.42f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{-0.32f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{-0.32f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices4[] = {
-		// x      y     z       u     v
-		{{-0.52f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-0.52f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{-0.42f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{-0.42f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices4[] = {
+	//	// x      y     z       u     v
+	//	{{-0.52f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{-0.52f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{-0.42f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{-0.42f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices5[] = {
-		// x      y     z       u     v
-		{{-0.62f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-0.62f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{-0.52f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{-0.52f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices5[] = {
+	//	// x      y     z       u     v
+	//	{{-0.62f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{-0.62f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{-0.52f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{-0.52f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices6[] = {
-		// x      y     z       u     v
-		{{-0.72f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-0.72f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{-0.62f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{-0.62f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices6[] = {
+	//	// x      y     z       u     v
+	//	{{-0.72f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{-0.72f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{-0.62f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{-0.62f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices7[] = {
-		// x      y     z       u     v
-		{{-0.82f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{-0.82f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{-0.72f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{-0.72f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices7[] = {
+	//	// x      y     z       u     v
+	//	{{-0.82f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{-0.82f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{-0.72f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{-0.72f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices8[] = {
-		// x      y     z       u     v
-		{{+0.12f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{+0.12f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{+0.32f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{+0.32f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices8[] = {
+	//	// x      y     z       u     v
+	//	{{+0.12f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{+0.12f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{+0.32f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{+0.32f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices9[] = {
-		// x      y     z       u     v
-		{{+0.32f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{+0.32f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{+0.52f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{+0.52f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices9[] = {
+	//	// x      y     z       u     v
+	//	{{+0.32f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{+0.32f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{+0.52f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{+0.52f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 
-	Mesh::Vertex vertices10[] = {
-		// x      y     z       u     v
-		{{+0.52f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-		{{+0.52f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-		{{+0.62f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-		{{+0.62f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	};
+	//Mesh::Vertex vertices10[] = {
+	//	// x      y     z       u     v
+	//	{{+0.52f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
+	//	{{+0.52f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
+	//	{{+0.62f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
+	//	{{+0.62f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
+	//};
 	unsigned short indices[] = {
+		//前
 		0, 1, 2, // 三角形1つ目
 		1, 2, 3, // 三角形2つ目
+
+		//後
+		4,5,6,
+		5,6,7,
+
+		//左
+		8,9,10,
+		9,10,11,
+
+		//右
+		12,13,14,
+		13,14,15,
+
+		//下
+		16,17,18,
+		17,18,19,
+
+		//上
+		20,21,22,
+		21,22,23,
+
+
 	};
 
 	int vertices_count;
@@ -347,8 +462,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertices_count = _countof(vertices);
 	indices_count = _countof(indices);
 
-	mesh[0].Mesh_Initialization(device, vertices, indices, _countof(vertices), indices_count);
-	mesh[1].Mesh_Initialization(device, vertices2, indices, _countof(vertices2), indices_count);
+	mesh[0].Mesh_Initialization(device.Get(), vertices, indices, _countof(vertices), indices_count);
+	/*mesh[1].Mesh_Initialization(device, vertices2, indices, _countof(vertices2), indices_count);
 	mesh[2].Mesh_Initialization(device, vertices3, indices, _countof(vertices3), indices_count);
 	mesh[3].Mesh_Initialization(device, vertices4, indices, _countof(vertices4), indices_count);
 	mesh[4].Mesh_Initialization(device, vertices5, indices, _countof(vertices5), indices_count);
@@ -356,8 +471,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	mesh[6].Mesh_Initialization(device, vertices7, indices, _countof(vertices7), indices_count);
 	mesh[7].Mesh_Initialization(device, vertices8, indices, _countof(vertices8), indices_count);
 	mesh[8].Mesh_Initialization(device, vertices9, indices, _countof(vertices9), indices_count);
-	mesh[9].Mesh_Initialization(device, vertices10, indices, _countof(vertices10), indices_count);
+	mesh[9].Mesh_Initialization(device, vertices10, indices, _countof(vertices10), indices_count);*/
 	
+	
+
 	//ゲームループ
 	while (true) {
 #pragma region ウィンドウメッセージ処理
@@ -395,7 +512,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//1.リソースバリアで書き込み可能に変更
 		D3D12_RESOURCE_BARRIER barrierDesc{};
-		barrierDesc.Transition.pResource = backBuffers[bbIndex];
+		barrierDesc.Transition.pResource = backBuffers[bbIndex].Get();
 		barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 		barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		commandList->ResourceBarrier(1, &barrierDesc);
@@ -404,7 +521,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//レンダーターゲットビューのハンドルを取得
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
 		rtvHandle.ptr += bbIndex * device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
-		commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap->GetCPUDescriptorHandleForHeapStart();
+		commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 		//3.画面クリア			R	  G	   B	A
 		FLOAT clearColor[] = { 0.1f,0.25f,0.5f,0.0f };//青っぽい色
@@ -429,6 +547,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		keyboard->GetDeviceState(sizeof(key), key);
 
+
+		mesh->Mesh_Update(key);
+
+		
 		/*transformX = 0.0f;
 		transformY = 0.0f;
 		rotation = 0.0f;
@@ -530,9 +652,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->RSSetScissorRects(1, &scissorRect);
 
 		//Meshの描画--------------------------------------------------------------//
+		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
 		for (int i = 0; i < 10; i++)
 		{
-			mesh[i].Mesh_Draw(device, indices_count, commandList);
+			mesh[0].Mesh_Draw(device.Get(), indices_count, commandList);
 		}
 		
 		
@@ -542,7 +666,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region 画面入れ替え
 
-
+		
 		//5.リソースバリアを戻す
 		barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;//描画状態から
 		barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;//表示状態へ
@@ -583,5 +707,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	UnregisterClass(w.lpszClassName, w.hInstance);
 
 #pragma endregion
+
+	Render_basic::DestroyInstance();
+
 	return 0;
 }
