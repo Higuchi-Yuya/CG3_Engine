@@ -415,6 +415,16 @@ void Mesh::Mesh_Update(BYTE key[])
 		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 	}
 	
+	if (key[DIK_W] || key[DIK_S])
+	{
+		if (key[DIK_W]) { angle += XMConvertToRadians(1.0f); }
+		else if (key[DIK_S]) { angle -= XMConvertToRadians(1.0f); }
+
+		eye.y = -100 * sinf(angle);
+		eye.z = -100 * cosf(angle);
+
+		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+	}
 	//s—ñ‚Ì‡¬
 	constMapTransform->mat = matWorld * matView * matProjection;
 
