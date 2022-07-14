@@ -23,7 +23,7 @@ private:
 	Render_basic& operator=(const Render_basic&&) = delete;
 
 	HRESULT result;
-	//πプランステートの生成
+	// パイプランステートの生成
 	ID3D12PipelineState* pipelineStage = nullptr;
 	// ルートシグネチャ
 	ID3D12RootSignature* rootSignature;

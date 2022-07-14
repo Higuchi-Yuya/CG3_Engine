@@ -18,6 +18,33 @@ public:
 		XMFLOAT3 normal; // 法線ベクトル
 		XMFLOAT2 uv;     // uv座標
 	};
+
+	// 定数バッファ用データ構造体  (3D変換行列)
+	struct ConstBufferDataTransform {
+		XMMATRIX mat; // 3D変換行列
+	};
+
+	struct Object3d
+	{
+		//定数バッファ (行列用)
+		ID3D12Resource* constBuffTransform = nullptr;
+		//定数バッファマップ(行列用)
+		ConstBufferDataTransform* constMapTransform = nullptr;
+
+		//アフィン変換情報
+		XMFLOAT3 scale = { 1.0f,1.0f,1.0f };
+		XMFLOAT3 rotation = { 0.0f,0.0f,0.0f };
+		XMFLOAT3 position = { 0.0f,0.0f,0.0f };
+
+		//ワールド変換行列
+		XMMATRIX matWorld;
+
+		//親オブジェクトへのポインタ
+		Object3d* parent = nullptr;
+	};
+
+	
+
 public:
 	Mesh();
 
@@ -29,6 +56,11 @@ public:
 
 	void Mesh_Draw(ID3D12Device* device, int indices_count, ID3D12GraphicsCommandList* commandList);
 
+	void InitializeObject3d(Object3d* object, ID3D12Device* device);
+
+	void UpdateObject3d(Object3d* object, XMMATRIX& matView, XMMATRIX& matProjection);
+
+	void DrawObject3d(Object3d* object, ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW& vdView, D3D12_INDEX_BUFFER_VIEW& ibView, UINT numIndices);
 private:
 	/*void ConstantBuffer_creation(struct ConstBufferData);*/
 	
@@ -47,21 +79,32 @@ private:
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 	//インデックスバッファ
 	D3D12_INDEX_BUFFER_VIEW ibView{};
-
-	ID3D12Resource* constBuffTransform = nullptr;
 	
-	// 定数バッファ用データ構造体  (3D変換行列)
-	struct ConstBufferDataTransform {
-		XMMATRIX mat; // 3D変換行列
-	};
+	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle;
 
-	ConstBufferDataTransform* constMapTransform = nullptr;
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
 
-	//ワールド変換行列
+	//D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
+
+	ID3D12Resource* constBuffTransform0 = nullptr;
+
+	ConstBufferDataTransform* constMapTransform0 = nullptr;
+
+	ID3D12Resource* constBuffTransform1 = nullptr;
+
+	ConstBufferDataTransform* constMapTransform1 = nullptr;
+
+	//ワールド変換行列 0番
 	XMMATRIX matWorld;
 	XMMATRIX matScale;
 	XMMATRIX matRot;
 	XMMATRIX matTrans;
+
+	//ワールド変換行列 1番
+	XMMATRIX matWorld1;
+	XMMATRIX matScale1;
+	XMMATRIX matRot1;
+	XMMATRIX matTrans1;
 
 	//投影行列
 	XMMATRIX matProjection;
@@ -74,10 +117,16 @@ private:
 
 	//角度
 	float angle = 0.0f;
-	//座標
-	XMFLOAT3 scale = { 1.0f,1.0f,1.0f };
-	XMFLOAT3 rotation = { 0.0f,0.0f,0.0f };
-	XMFLOAT3 position = { 0.0f,0.0f,0.0f };
+
+	UINT incrementSize;
+	////座標
+	//XMFLOAT3 scale = { 1.0f,1.0f,1.0f };
+	//XMFLOAT3 rotation = { 0.0f,0.0f,0.0f };
+	//XMFLOAT3 position = { 0.0f,0.0f,0.0f };
+
+	static const size_t kObjectCount = 50;
+
+	Object3d object3ds[kObjectCount];
 
 };
 

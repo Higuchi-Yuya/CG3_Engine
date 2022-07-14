@@ -79,7 +79,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//ウィンドウオブジェクトの生成
 	HWND hwnd = CreateWindow(w.lpszClassName,//クラス名指定
-		_T("LE2B_18_ヒグチ_ユウヤ_AL3"),     //タイトルバーの文字
+		_T("LE2B_18_ヒグチ_ユウヤ_CG2"),     //タイトルバーの文字
 		WS_OVERLAPPEDWINDOW,			     //タイトルバーと境界線があるウィンドウ
 		CW_USEDEFAULT,					     //表示x座標はOSにお任せ
 		CW_USEDEFAULT,					     //表示y座標はOSにお任せ
@@ -357,77 +357,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{{ 5.0f,  5.0f,  5.0f}, {},{1.0f, 0.0f}}, // 右上
 	};
 
-	//Mesh::Vertex vertices2[] = {
-	//	// x      y     z       u     v
-	//	{{-0.24f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{-0.24f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{-0.12f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{-0.12f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
 
-	//Mesh::Vertex vertices3[] = {
-	//	// x      y     z       u     v
-	//	{{-0.42f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{-0.42f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{-0.32f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{-0.32f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
-
-	//Mesh::Vertex vertices4[] = {
-	//	// x      y     z       u     v
-	//	{{-0.52f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{-0.52f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{-0.42f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{-0.42f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
-
-	//Mesh::Vertex vertices5[] = {
-	//	// x      y     z       u     v
-	//	{{-0.62f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{-0.62f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{-0.52f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{-0.52f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
-
-	//Mesh::Vertex vertices6[] = {
-	//	// x      y     z       u     v
-	//	{{-0.72f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{-0.72f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{-0.62f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{-0.62f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
-
-	//Mesh::Vertex vertices7[] = {
-	//	// x      y     z       u     v
-	//	{{-0.82f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{-0.82f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{-0.72f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{-0.72f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
-
-	//Mesh::Vertex vertices8[] = {
-	//	// x      y     z       u     v
-	//	{{+0.12f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{+0.12f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{+0.32f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{+0.32f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
-
-	//Mesh::Vertex vertices9[] = {
-	//	// x      y     z       u     v
-	//	{{+0.32f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{+0.32f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{+0.52f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{+0.52f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
-
-	//Mesh::Vertex vertices10[] = {
-	//	// x      y     z       u     v
-	//	{{+0.52f, -0.2f, 0.0f}, {0.0f, 1.0f}}, // 左下
-	//	{{+0.52f, +0.2f, 0.0f}, {0.0f, 0.0f}}, // 左上
-	//	{{+0.62f, -0.2f, 0.0f}, {1.0f, 1.0f}}, // 右下
-	//	{{+0.62f, +0.2f, 0.0f}, {1.0f, 0.0f}}, // 右上
-	//};
 	unsigned short indices[] = {
 		//前
 		0, 1, 2, // 三角形1つ目
@@ -456,6 +386,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	};
 
+	for (int i = 0; i < _countof(indices) / 3; i++)
+	{// 三角形一つごとに計算していく
+		// 三角形のインデックスを取り出して、一時的な変数に入れる
+		unsigned short indices_1 = indices[i * 3 + 0];
+		unsigned short indices_2 = indices[i * 3 + 1];
+		unsigned short indices_3 = indices[i * 3 + 2];
+		//三角形を構成する頂点座標をベクトルに代入
+		XMVECTOR p0 = XMLoadFloat3(&vertices[indices_1].pos);
+		XMVECTOR p1 = XMLoadFloat3(&vertices[indices_2].pos);
+		XMVECTOR p2 = XMLoadFloat3(&vertices[indices_3].pos);
+		// ｐ０ー＞ｐ１ベクトル、ｐ０ー＞ｐ２ベクトルを計算　（ベクトルの減算）
+		XMVECTOR v1 = XMVectorSubtract(p1, p0);
+		XMVECTOR v2 = XMVectorSubtract(p2, p0);
+
+		//外積は両方から垂直なベクトル
+		XMVECTOR normal = XMVector3Cross(v1, v2);
+
+		//正規化（長さを１にする）
+		normal = XMVector3Normalize(normal);
+
+		//求めた法線を頂点データに代入
+		XMStoreFloat3(&vertices[indices_1].normal, normal);
+		XMStoreFloat3(&vertices[indices_2].normal, normal);
+		XMStoreFloat3(&vertices[indices_3].normal, normal);
+	}
+
 	int vertices_count;
 	int indices_count;
 
@@ -463,15 +419,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indices_count = _countof(indices);
 
 	mesh[0].Mesh_Initialization(device.Get(), vertices, indices, _countof(vertices), indices_count);
-	/*mesh[1].Mesh_Initialization(device, vertices2, indices, _countof(vertices2), indices_count);
-	mesh[2].Mesh_Initialization(device, vertices3, indices, _countof(vertices3), indices_count);
-	mesh[3].Mesh_Initialization(device, vertices4, indices, _countof(vertices4), indices_count);
-	mesh[4].Mesh_Initialization(device, vertices5, indices, _countof(vertices5), indices_count);
-	mesh[5].Mesh_Initialization(device, vertices6, indices, _countof(vertices6), indices_count);
-	mesh[6].Mesh_Initialization(device, vertices7, indices, _countof(vertices7), indices_count);
-	mesh[7].Mesh_Initialization(device, vertices8, indices, _countof(vertices8), indices_count);
-	mesh[8].Mesh_Initialization(device, vertices9, indices, _countof(vertices9), indices_count);
-	mesh[9].Mesh_Initialization(device, vertices10, indices, _countof(vertices10), indices_count);*/
+
 	
 	
 
