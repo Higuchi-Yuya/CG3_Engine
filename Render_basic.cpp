@@ -18,9 +18,6 @@ void Render_basic::DestroyInstance()
 
 void Render_basic::Initialization(ID3D12Device* device)
 {
-
-
-
 	// デスクリプタレンジの設定
 	D3D12_DESCRIPTOR_RANGE descriptorRange{};
 	descriptorRange.NumDescriptors = 1;         //一度の描画に使うテクスチャが1枚なので1
@@ -224,7 +221,7 @@ void Render_basic::Initialization(ID3D12Device* device)
 	assert(SUCCEEDED(result));
 	//rootSigBlob->Release();
 	// パイプラインにルートシグネチャをセット
-	pipelineDesc.pRootSignature = rootSignature;
+	pipelineDesc.pRootSignature = rootSignature.Get();
 
 
 	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineStage));
@@ -233,10 +230,10 @@ void Render_basic::Initialization(ID3D12Device* device)
 
 ID3D12PipelineState* Render_basic::GetPipelineState() const
 {
-	return pipelineStage;
+	return pipelineStage.Get();
 }
 
 ID3D12RootSignature* Render_basic::GetRootSignature() const
 {
-	return rootSignature;
+	return rootSignature.Get();
 }

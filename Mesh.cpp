@@ -2,6 +2,7 @@
 #include "Render_basic.h"
 #include <dinput.h>
 
+
 // ウィンドウ横幅
 static const int window_width = 1280;
 // ウィンドウ縦幅
@@ -115,7 +116,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	textureResourceDesc2.SampleDesc.Count = 1;
 
 	// テクスチャバッファの生成
-	ID3D12Resource* texBuff = nullptr;
+	
 	result = device->CreateCommittedResource(
 		&textureHeapProp,
 		D3D12_HEAP_FLAG_NONE,
@@ -141,7 +142,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	}
 
 	//二枚目のテクスチャバッファ
-	ID3D12Resource* texBuff2 = nullptr;
+	
 	result = device->CreateCommittedResource(
 		&textureHeapProp,
 		D3D12_HEAP_FLAG_NONE,
@@ -174,7 +175,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	srvHeapDesc.NumDescriptors = kMaxSRVCount;
 
 	// 設定を元にSRV用デスクリプタヒープを生成
-	result = device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&srvHeap));
+	result = device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(srvHeap.GetAddressOf()));
 	assert(SUCCEEDED(result));
 
 	
@@ -195,7 +196,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	// 頂点バッファの生成
-	ID3D12Resource* vertBuff = nullptr;
+	
 	result = device->CreateCommittedResource(
 		&heapProp, // ヒープ設定
 		D3D12_HEAP_FLAG_NONE,
@@ -218,7 +219,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	// インデックスバッファの生成
-	ID3D12Resource* indexBuff = nullptr;
+	
 	result = device->CreateCommittedResource(
 		&heapProp, // ヒープ設定
 		D3D12_HEAP_FLAG_NONE,
@@ -312,7 +313,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 
 
 	// ハンドルの指す位置にシェーダーリソースビュー作成
-	device->CreateShaderResourceView(texBuff, &srvDesc, srvHandle);
+	device->CreateShaderResourceView(texBuff.Get(), &srvDesc, srvHandle);
 
 	//二枚目の画像に必要な設定
 
@@ -329,7 +330,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc2.Texture2D.MipLevels = textureResourceDesc2.MipLevels;
 
-	device->CreateShaderResourceView(texBuff2, &srvDesc2, srvHandle);
+	device->CreateShaderResourceView(texBuff2.Get(), &srvDesc2, srvHandle);
 
 	srvHandle.ptr += incrementSize;
 
@@ -340,15 +341,11 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	device->CreateConstantBufferView(&cbvDesc, srvHandle);
 
 
-	// 定数バッファ用データ構造体（マテリアル）
-	struct ConstBufferDataMaterial {
-		XMFLOAT4 color; // 色 (RGBA)
-	};
+
 	// 定数バッファ用データ構造体Pos（マテリアル）
 	struct ConstBufferDataMaterialPos {
 		XMFLOAT4 Move; // 移動
 	};
-	
 
 	//Creation<ConstBufferDataMaterial>();
 	// ヒープ設定
@@ -376,11 +373,11 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	assert(SUCCEEDED(result));
 
 	// 定数バッファのマッピング
-	ConstBufferDataMaterial* constMapMaterial = nullptr;
-	result = constBuffMaterial->Map(0, nullptr, (void**)&constMapMaterial); // マッピング
+	
+	result = constBuffMaterial.Get()->Map(0, nullptr, (void**)&constMapMaterial); // マッピング
 	assert(SUCCEEDED(result));
 
-	constMapMaterial->color = XMFLOAT4(1, 1, 1, 1);
+	
 
 
 	//行列定数バッファ
@@ -473,11 +470,13 @@ void Mesh::Mesh_Update(BYTE key[])
 	if (key[DIK_1]|| key[DIK_2])
 	{
 		if(key[DIK_1]){ srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart(); }
-		if(key[DIK_2]){ srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart(); 
-						srvGpuHandle.ptr += incrementSize * 1;}
+		if(key[DIK_2]){ srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
+						srvGpuHandle.ptr += incrementSize;}
 	}
 #pragma endregion
 
+	
+	constMapMaterial->color = XMFLOAT4(R, G, B, 1);
 }
 
 void Mesh::Mesh_Draw(ID3D12Device* device, int indices_count, ID3D12GraphicsCommandList* commandList)
@@ -490,10 +489,10 @@ void Mesh::Mesh_Draw(ID3D12Device* device, int indices_count, ID3D12GraphicsComm
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
 
 	// 定数バッファビュー(CBV)の設定コマンド
-	commandList->SetGraphicsRootConstantBufferView(0, constBuffMaterial->GetGPUVirtualAddress());
+	commandList->SetGraphicsRootConstantBufferView(0, constBuffMaterial.Get()->GetGPUVirtualAddress());
 
 	// SRVヒープの設定コマンド
-	commandList->SetDescriptorHeaps(1, &srvHeap);
+	commandList->SetDescriptorHeaps(1, srvHeap.GetAddressOf());
 
 	// SRVヒープの先頭ハンドルを取得（SRVを指しているはず
 
