@@ -414,33 +414,33 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 
-
 #pragma endregion
 
 }
 
 void Mesh::Mesh_Update(BYTE key[])
 {
+
 #pragma region カメラの処理
 	if (key[DIK_D] || key[DIK_A])
 	{
-		if (key[DIK_D]) { angle += XMConvertToRadians(1.0f); }
-		else if (key[DIK_A]) { angle -= XMConvertToRadians(1.0f); }
+		if (key[DIK_D]) { angle_x += XMConvertToRadians(1.0f); }
+		else if (key[DIK_A]) { angle_x -= XMConvertToRadians(1.0f); }
 
 		// angleラジアンだけｙ軸周りに回転。半径はー１００
-		eye.x = -100 * sinf(angle);
-		eye.z = -100 * cosf(angle);
+		eye.x = -100 * sinf(angle_x);
+		eye.z = -100 * cosf(angle_x);
 
 		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 	}
 
 	if (key[DIK_W] || key[DIK_S])
 	{
-		if (key[DIK_W]) { angle += XMConvertToRadians(1.0f); }
-		else if (key[DIK_S]) { angle -= XMConvertToRadians(1.0f); }
+		if (key[DIK_W]) { angle_y += XMConvertToRadians(1.0f); }
+		else if (key[DIK_S]) { angle_y -= XMConvertToRadians(1.0f); }
 
-		eye.y = -100 * sinf(angle);
-		eye.z = -100 * cosf(angle);
+		eye.y = -100 * sinf(angle_y);
+		eye.z = -100 * cosf(angle_y);
 
 		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
 	}
@@ -452,8 +452,8 @@ void Mesh::Mesh_Update(BYTE key[])
 	if (key[DIK_UP] || key[DIK_DOWN] || key[DIK_RIGHT] || key[DIK_LEFT])
 	{
 		//座標を移動する処理
-		if (key[DIK_UP]) { object3ds[0].position.z += 1.0f; }
-		else if (key[DIK_DOWN]) { object3ds[0].position.z -= 1.0f; }
+		if (key[DIK_UP]) { object3ds[0].position.y += 1.0f; }
+		else if (key[DIK_DOWN]) { object3ds[0].position.y -= 1.0f; }
 		if (key[DIK_RIGHT]) { object3ds[0].position.x += 1.0f; }
 		else if (key[DIK_LEFT]) { object3ds[0].position.x -= 1.0f; }
 	}
@@ -475,8 +475,26 @@ void Mesh::Mesh_Update(BYTE key[])
 	}
 #pragma endregion
 
-	
-	constMapMaterial->color = XMFLOAT4(R, G, B, 1);
+#pragma region 色の切り替え処理
+	if (R <= 1 && R > 0)
+	{
+		R -= 0.01;
+		if (R <= 0) { R = 1; }
+	}
+	else if (G <= 1 && G > 0)
+	{
+		G -= 0.01;
+		if (G <= 0) { G = 1; }
+	}
+	else if (B <= 1 && B > 0)
+	{
+		B -= 0.01;
+		if (B <= 0) { B = 1; }
+	}
+
+	constMapMaterial->color = XMFLOAT4(R, G, B, 0.5);
+#pragma endregion
+
 }
 
 void Mesh::Mesh_Draw(ID3D12Device* device, int indices_count, ID3D12GraphicsCommandList* commandList)
@@ -576,4 +594,100 @@ void Mesh::DrawObject3d(Object3d* object, ID3D12GraphicsCommandList* commandList
 
 	// 描画コマンド
 	commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, 0);
+}
+
+void Mesh::Mesh_InitializeLine_Line(ID3D12Device* device, Vertex2* vertices_,int vertices_count)
+{
+	//頂点データ全体のサイズ＝頂点データ一つ分のサイズ＊頂点データの要素数
+	UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * vertices_count);
+
+
+	//頂点バッファの設定
+	D3D12_HEAP_PROPERTIES heapProp{};  //ヒープ設定
+	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;  //GPUへの転送用
+	//リソース設定
+	D3D12_RESOURCE_DESC resDesc{};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resDesc.Width = sizeVB; //頂点データ全体のサイズ
+	resDesc.Height = 1;
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	//頂点バッファの生成
+	ID3D12Resource* vertBuff = nullptr;
+
+	result = device->CreateCommittedResource(
+		&heapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vertBuff));
+
+	assert(SUCCEEDED(result));
+
+
+	//GPU上のバッファに対応した仮想メモリ（メインメモリ上）を取得....1
+	XMFLOAT3* vertMap = nullptr;
+	result = vertBuff->Map(0, nullptr, (void**)&vertMap);
+	assert(SUCCEEDED(result));
+
+	//全頂点に対して
+	for (int i = 0; i < vertices_count; i++) {
+		vertMap[i] = vertices_[i].pos;  //座標をコピー
+	}
+
+
+	//繋がりを解除
+	vertBuff->Unmap(0, nullptr);
+
+	//頂点バッファビューの作成
+	D3D12_VERTEX_BUFFER_VIEW vbView{};
+	//GPU仮想アドレス
+	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
+	//頂点バッファのサイズ
+	vbView.SizeInBytes = sizeVB;
+	//頂点一つ分のデータサイズ
+	vbView.StrideInBytes = sizeof(XMFLOAT3);
+
+	ID3DBlob* vsBlob = nullptr; // 頂点シェーダオブジェクト
+	ID3DBlob* psBlob = nullptr; // ピクセルシェーダオブジェクト
+	ID3DBlob* errorBlob = nullptr; // エラーオブジェクト
+
+	
+
+}
+
+void Mesh::Mesh_Draw_Line(int indices_count, ID3D12GraphicsCommandList* commandList)
+{
+	//パイプラインステートとルートシグネチャの設定コマンド
+	commandList->SetPipelineState(Render_basic::GetInstance()->GetPipelineState());
+	commandList->SetGraphicsRootSignature(Render_basic::GetInstance()->GetRootSignature());
+
+	// プリミティブ形状の設定コマンド
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // ラインリスト
+
+	// 定数バッファビュー(CBV)の設定コマンド
+	commandList->SetGraphicsRootConstantBufferView(0, constBuffMaterial.Get()->GetGPUVirtualAddress());
+
+	// SRVヒープの設定コマンド
+	commandList->SetDescriptorHeaps(1, srvHeap.GetAddressOf());
+
+	// SRVヒープの先頭ハンドルを取得（SRVを指しているはず
+
+
+	// SRVヒープの先頭にあるSRVをルートパラメータ1番に設定
+	commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
+
+	//頂点バッファの設定
+	commandList->IASetVertexBuffers(0, 1, &vbView);
+
+	// インデックスバッファビューの設定コマンド
+	commandList->IASetIndexBuffer(&ibView);
+
+
+	// 描画コマンド
+	commandList->DrawIndexedInstanced(indices_count, 1, 0, 0, 0);
 }

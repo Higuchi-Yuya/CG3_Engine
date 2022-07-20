@@ -23,6 +23,11 @@ public:
 		XMFLOAT2 uv;     // uv座標
 	};
 
+	struct Vertex2
+	{
+		XMFLOAT3 pos;
+	};
+
 	// 定数バッファ用データ構造体  (3D変換行列)
 	struct ConstBufferDataTransform {
 		XMMATRIX mat; // 3D変換行列
@@ -42,7 +47,7 @@ public:
 		XMFLOAT3 position = { 0.0f,0.0f,0.0f };
 
 		//ワールド変換行列
-		XMMATRIX matWorld;
+		XMMATRIX matWorld{};
 
 		//親オブジェクトへのポインタ
 		Object3d* parent = nullptr;
@@ -67,7 +72,10 @@ public:
 
 	void DrawObject3d(Object3d* object, ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW& vdView, D3D12_INDEX_BUFFER_VIEW& ibView, UINT numIndices);
 
-	template<class T>using ComPtr = Microsoft::WRL::ComPtr<T>;
+	void Mesh_InitializeLine_Line(ID3D12Device* device, Vertex2* vertices_, int vertices_count);
+
+	void Mesh_Draw_Line(int indices_count, ID3D12GraphicsCommandList* commandList);
+
 private:
 	/*void ConstantBuffer_creation(struct ConstBufferData);*/
 	
@@ -137,7 +145,8 @@ private:
 	XMFLOAT3 up = { 0, 1, 0 };      //上方向ベクトル
 
 	//角度
-	float angle = 0.0f;
+	float angle_x = 0.0f;
+	float angle_y = 0.0f;
 
 	UINT incrementSize;
 

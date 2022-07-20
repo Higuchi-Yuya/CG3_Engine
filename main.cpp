@@ -53,7 +53,7 @@ LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 #pragma endregion
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 
 #pragma region WindowsAPI初期化処理
 
@@ -357,7 +357,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{{ 5.0f,  5.0f,  5.0f}, {},{1.0f, 0.0f}}, // 右上
 	};
 
-
+	Mesh::Vertex2 vertices2[] = {
+		{{0.0f,0.0f,20.0f}},
+		{{0.0f,0.0f,-20.0f}},
+		{{1.0f,0.0f,20.0f}},
+		{{1.0f,0.0f,-20.0f}},
+		{{2.0f,0.0f,20.0f}},
+		{{2.0f,0.0f,-20.0f}},
+		{{3.0f,0.0f,20.0f}},
+		{{3.0f,0.0f,-20.0f}},
+		{{4.0f,0.0f,20.0f}},
+		{{4.0f,0.0f,-20.0f}},
+		{{5.0f,0.0f,20.0f}},
+		{{5.0f,0.0f,-20.0f}},
+		{{-1.0f,0.0f,20.0f}},
+		{{-1.0f,0.0f,-20.0f}},
+		{{-2.0f,0.0f,20.0f}},
+		{{-2.0f,0.0f,-20.0f}},
+		{{-3.0f,0.0f,20.0f}},
+		{{-3.0f,0.0f,-20.0f}},
+		{{-4.0f,0.0f,20.0f}},
+		{{-4.0f,0.0f,-20.0f}},
+		{{-5.0f,0.0f,20.0f}},
+		{{-5.0f,0.0f,-20.0f}},
+	};
+	
 	unsigned short indices[] = {
 		//前
 		0, 1, 2, // 三角形1つ目
@@ -419,7 +443,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indices_count = _countof(indices);
 
 	mesh[0].Mesh_Initialization(device.Get(), vertices, indices, _countof(vertices), indices_count);
-
+	mesh[0].Mesh_InitializeLine_Line(device.Get(), vertices2, _countof(vertices2));
 	
 	
 
@@ -468,7 +492,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//2.描画先の変更
 		//レンダーターゲットビューのハンドルを取得
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
-		rtvHandle.ptr += bbIndex * device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
+		rtvHandle.ptr += static_cast<unsigned long long>(bbIndex) * device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
 		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap->GetCPUDescriptorHandleForHeapStart();
 		commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
@@ -606,7 +630,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{
 			mesh[0].Mesh_Draw(device.Get(), indices_count, commandList.Get());
 		}
-		
+		mesh[0].Mesh_Draw_Line(_countof(vertices2), commandList.Get());
 		
 		//4.描画コマンドここまで
 
@@ -636,8 +660,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (fence->GetCompletedValue() != fenceVal) {
 			HANDLE event = CreateEvent(nullptr, false, false, nullptr);
 			fence->SetEventOnCompletion(fenceVal, event);
-			WaitForSingleObject(event, INFINITE);
-			CloseHandle(event);
+			if (event != 0)
+			{
+				WaitForSingleObject(event, INFINITE);
+				CloseHandle(event);
+			}
+			
 		}
 
 		//キューをクリア
