@@ -18,7 +18,9 @@
 #include <wrl.h>
 
 #include <math.h>
+#include "Line.h"
 #include "Mesh.h"
+
 #include "Render_basic.h"
 
 
@@ -270,6 +272,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 #pragma endregion
 
 	Render_basic::GetInstance()->Initialization(device.Get());
+	
+	Render_basic::GetInstance()->Initialization2(device.Get());
 
 	//リソース設定
 	D3D12_RESOURCE_DESC depthResoureDesc{};
@@ -318,6 +322,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 
 	Mesh mesh[10];
 
+	Line line[20];
+
 	Mesh::Vertex vertices[] = {
 		// x      y      z       u      v
 		//前
@@ -357,31 +363,88 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 		{{ 5.0f,  5.0f,  5.0f}, {},{1.0f, 0.0f}}, // 右上
 	};
 
-	Mesh::Vertex2 vertices2[] = {
-		{{0.0f,0.0f,20.0f}},
-		{{0.0f,0.0f,-20.0f}},
-		{{1.0f,0.0f,20.0f}},
-		{{1.0f,0.0f,-20.0f}},
-		{{2.0f,0.0f,20.0f}},
-		{{2.0f,0.0f,-20.0f}},
-		{{3.0f,0.0f,20.0f}},
-		{{3.0f,0.0f,-20.0f}},
-		{{4.0f,0.0f,20.0f}},
-		{{4.0f,0.0f,-20.0f}},
-		{{5.0f,0.0f,20.0f}},
-		{{5.0f,0.0f,-20.0f}},
-		{{-1.0f,0.0f,20.0f}},
-		{{-1.0f,0.0f,-20.0f}},
-		{{-2.0f,0.0f,20.0f}},
-		{{-2.0f,0.0f,-20.0f}},
-		{{-3.0f,0.0f,20.0f}},
-		{{-3.0f,0.0f,-20.0f}},
-		{{-4.0f,0.0f,20.0f}},
-		{{-4.0f,0.0f,-20.0f}},
-		{{-5.0f,0.0f,20.0f}},
-		{{-5.0f,0.0f,-20.0f}},
+	Mesh::Vertex line_vertices1[] = {
+		{{2.0f,0.0f,18.0f}},
+		{{2.0f,0.0f,-18.0f}}
 	};
-	
+	Mesh::Vertex line_vertices2[] = {
+		{{6.0f,0.0f,18.0f}},
+		{{6.0f,0.0f,-18.0f}}
+	};
+	Mesh::Vertex line_vertices3[] = {
+		{{10.0f,0.0f,18.0f}},
+		{{10.0f,0.0f,-18.0f}},
+	};
+	Mesh::Vertex line_vertices4[] = {
+		{{14.0f,0.0f,18.0f}},
+		{{14.0f,0.0f,-18.0f}},
+	};
+	Mesh::Vertex line_vertices5[] = {
+		{{18.0f,0.0f,18.0f}},
+		{{18.0f,0.0f,-18.0f}},
+	};
+	Mesh::Vertex line_vertices6[] = {
+		{{-2.0f,0.0f,18.0f}},
+		{{-2.0f,0.0f,-18.0f}}
+	};
+	Mesh::Vertex line_vertices7[] = {
+		{{-6.0f,0.0f,18.0f}},
+		{{-6.0f,0.0f,-18.0f}},
+	};
+	Mesh::Vertex line_vertices8[] = {
+		{{-10.0f,0.0f,18.0f}},
+		{{-10.0f,0.0f,-18.0f}},
+	};
+	Mesh::Vertex line_vertices9[] = {
+		{{-14.0f,0.0f,18.0f}},
+		{{-14.0f,0.0f,-18.0f}},
+	};
+	Mesh::Vertex line_vertices10[] = {
+	{{-18.0f,0.0f,18.0f}},
+	{{-18.0f,0.0f,-18.0f}},
+	};
+	Mesh::Vertex line_vertices11[] = {
+	{{18.0f,0.0f,2.0f}},
+	{{-18.0f,0.0f,2.0f}}
+
+	};
+	Mesh::Vertex line_vertices12[] = {
+		{{18.0f,0.0f,6.0f}},
+		{{-18.0f,0.0f,6.0f}}
+	};
+	Mesh::Vertex line_vertices13[] = {
+		{{18.0f,0.0f,10.0f}},
+		{{-18.0f,0.0f,10.0f}},
+	};
+	Mesh::Vertex line_vertices14[] = {
+		{{18.0f,0.0f,14.0f}},
+		{{-18.0f,0.0f,14.0f}},
+	};
+	Mesh::Vertex line_vertices15[] = {
+		{{18.0f,0.0f,18.0f}},
+		{{-18.0f,0.0f,18.0f}},
+	};
+	Mesh::Vertex line_vertices16[] = {
+		{{18.0f,0.0f,-2.0f}},
+		{{-18.0f,0.0f,-2.0f}}
+	};
+	Mesh::Vertex line_vertices17[] = {
+		{{18.0f,0.0f,-6.0f}},
+		{{-18.0f,0.0f,-6.0f}},
+	};
+	Mesh::Vertex line_vertices18[] = {
+		{{18.0f,0.0f,-10.0f}},
+		{{-18.0f,0.0f,-10.0f}},
+	};
+	Mesh::Vertex line_vertices19[] = {
+		{{18.0f,0.0f,-14.0f}},
+		{{-18.0f,0.0f,-14.0f}},
+	};
+	Mesh::Vertex line_vertices20[] = {
+	{{18.0f,0.0f,-18.0f}},
+	{{-18.0f,0.0f,-18.0f}},
+	};
+
 	unsigned short indices[] = {
 		//前
 		0, 1, 2, // 三角形1つ目
@@ -408,6 +471,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 		22,21,23,
 
 
+	};
+
+	unsigned short indices2[] = {
+		0,1
 	};
 
 	for (int i = 0; i < _countof(indices) / 3; i++)
@@ -439,14 +506,61 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 	int vertices_count;
 	int indices_count;
 
+	int vertices_count2;
+	int indices_count2;
+
 	vertices_count = _countof(vertices);
 	indices_count = _countof(indices);
 
-	mesh[0].Mesh_Initialization(device.Get(), vertices, indices, _countof(vertices), indices_count);
-	mesh[0].Mesh_InitializeLine_Line(device.Get(), vertices2, _countof(vertices2));
-	
-	
+	vertices_count2 = _countof(line_vertices1);
+	indices_count2 = _countof(indices2);
 
+	mesh[0].Mesh_Initialization(device.Get(), vertices, indices, _countof(vertices), indices_count);
+
+#pragma region グリット線の設定
+	line[0].Line_Initialize(device.Get(), line_vertices1, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices2);
+	line[1].Line_Initialize(device.Get(), line_vertices2, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices3);
+	line[2].Line_Initialize(device.Get(), line_vertices3, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices4);
+	line[3].Line_Initialize(device.Get(), line_vertices4, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices5);
+	line[4].Line_Initialize(device.Get(), line_vertices5, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices6);
+	line[5].Line_Initialize(device.Get(), line_vertices6, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices7);
+	line[6].Line_Initialize(device.Get(), line_vertices7, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices8);
+	line[7].Line_Initialize(device.Get(), line_vertices8, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices9);
+	line[8].Line_Initialize(device.Get(), line_vertices9, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices10);
+	line[9].Line_Initialize(device.Get(), line_vertices10, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices11);
+	line[10].Line_Initialize(device.Get(), line_vertices11, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices12);
+	line[11].Line_Initialize(device.Get(), line_vertices12, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices13);
+	line[12].Line_Initialize(device.Get(), line_vertices13, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices14);
+	line[13].Line_Initialize(device.Get(), line_vertices14, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices15);
+	line[14].Line_Initialize(device.Get(), line_vertices15, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices16);
+	line[15].Line_Initialize(device.Get(), line_vertices16, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices17);
+	line[16].Line_Initialize(device.Get(), line_vertices17, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices18);
+	line[17].Line_Initialize(device.Get(), line_vertices18, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices19);
+	line[18].Line_Initialize(device.Get(), line_vertices19, indices2, vertices_count2, indices_count2);
+	vertices_count2 = _countof(line_vertices20);
+	line[19].Line_Initialize(device.Get(), line_vertices20, indices2, vertices_count2, indices_count2);
+#pragma endregion
+	// グリット線の初期設定
+
+	
 	//ゲームループ
 	while (true) {
 #pragma region ウィンドウメッセージ処理
@@ -521,7 +635,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 
 
 		mesh->Mesh_Update(key);
-
+		for (int i = 0; i < 20; i++)
+		{
+			line[i].Line_Updata();
+		}
+		
 		
 		/*transformX = 0.0f;
 		transformY = 0.0f;
@@ -626,12 +744,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 		//Meshの描画--------------------------------------------------------------//
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-		for (int i = 0; i < 10; i++)
-		{
-			mesh[0].Mesh_Draw(device.Get(), indices_count, commandList.Get());
-		}
-		mesh[0].Mesh_Draw_Line(_countof(vertices2), commandList.Get());
 		
+		mesh[0].Mesh_Draw(device.Get(), indices_count, commandList.Get());
+		
+		for (int i = 0; i < 20; i++)
+		{
+			line[i].Line_Draw(indices_count2, commandList.Get());
+		}
 		//4.描画コマンドここまで
 
 #pragma endregion

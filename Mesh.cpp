@@ -1,12 +1,17 @@
 #include "Mesh.h"
 #include "Render_basic.h"
 #include <dinput.h>
-
+#include "Texture.h"
 
 // ウィンドウ横幅
 static const int window_width = 1280;
+
 // ウィンドウ縦幅
 static const int window_height = 720;
+
+XMMATRIX Mesh::matProjection = {};
+XMMATRIX Mesh::matView = {};
+
 
 Mesh::Mesh()
 {
@@ -24,25 +29,9 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	//---------------描画初期化処理 ここから----------------//
 	/////////////////////////////////////////////////////
 
-	//// 横方向ピクセル数
-	//const size_t textureWidth = 256;
-	//// 縦方向ピクセル数
-	//const size_t textureHeight = 256;
-	//// 配列の要素数
-	//const size_t imageDataCount = textureWidth * textureHeight;
-	//// 画像イメージデータ配列
-	//XMFLOAT4* imageData = new XMFLOAT4[imageDataCount]; // ※必ず後で解放する
-
-	//// 全ピクセルの色を初期化
-	//for (size_t i = 0; i < imageDataCount; i++) {
-	//	imageData[i].x = 0.0f;    // R
-	//	imageData[i].y = 1.0f;    // G
-	//	imageData[i].z = 0.0f;    // B
-	//	imageData[i].w = 1.0f;    // A
-	//}
-
 
 	// 頂点、インデックス用カウント宣言
+
 
 	TexMetadata metadata{};
 	ScratchImage scratchImg{};
@@ -63,8 +52,8 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 		&metadata2, scratchImg2);
 	assert(SUCCEEDED(result));
 
-	ScratchImage mipChain{};
-	ScratchImage mipChain2{};
+	ScratchImage mipChain;
+	ScratchImage mipChain2;
 
 	// ミップマップ生成
 	result = GenerateMipMaps(
@@ -76,6 +65,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	}
 	assert(SUCCEEDED(result));
 
+	// ミップマップ生成
 	result = GenerateMipMaps(
 		scratchImg2.GetImages(), scratchImg2.GetImageCount(), scratchImg2.GetMetadata(),
 		TEX_FILTER_DEFAULT, 0, mipChain2);
@@ -87,6 +77,8 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 
 	// 読み込んだディフューズテクスチャをSRGBとして扱う
 	metadata.format = MakeSRGB(metadata.format);
+
+	// 読み込んだディフューズテクスチャをSRGBとして扱う
 	metadata2.format = MakeSRGB(metadata2.format);
 
 	// ヒープ設定
@@ -94,8 +86,6 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	textureHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;
 	textureHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
 	textureHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-
-	
 
 	D3D12_RESOURCE_DESC textureResourceDesc{};
 	textureResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -115,8 +105,9 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	textureResourceDesc2.MipLevels = (UINT16)metadata2.mipLevels;
 	textureResourceDesc2.SampleDesc.Count = 1;
 
-	// テクスチャバッファの生成
 	
+
+	// テクスチャバッファの生成
 	result = device->CreateCommittedResource(
 		&textureHeapProp,
 		D3D12_HEAP_FLAG_NONE,
@@ -141,8 +132,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 		assert(SUCCEEDED(result));
 	}
 
-	//二枚目のテクスチャバッファ
-	
+	// テクスチャバッファの生成
 	result = device->CreateCommittedResource(
 		&textureHeapProp,
 		D3D12_HEAP_FLAG_NONE,
@@ -152,6 +142,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 		IID_PPV_ARGS(&texBuff2));
 	assert(SUCCEEDED(result));
 
+	// 全ミップマップについて
 	for (size_t i = 0; i < metadata2.mipLevels; i++) {
 		// ミップマップレベルを指定してイメージを取得
 		const Image* img = scratchImg2.GetImage(i, 0, 0);
@@ -311,7 +302,6 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = textureResourceDesc.MipLevels;
 
-
 	// ハンドルの指す位置にシェーダーリソースビュー作成
 	device->CreateShaderResourceView(texBuff.Get(), &srvDesc, srvHandle);
 
@@ -330,6 +320,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc2.Texture2D.MipLevels = textureResourceDesc2.MipLevels;
 
+	// ハンドルの指す位置にシェーダーリソースビュー作成
 	device->CreateShaderResourceView(texBuff2.Get(), &srvDesc2, srvHandle);
 
 	srvHandle.ptr += incrementSize;
@@ -391,7 +382,7 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 			//先頭以外なら
 			if (i > 0) {
 				//ひとつ前のオブジェクトを親オブジェクトとする
-				//object3ds[i].parent = &object3ds[i - 1];
+				object3ds[i].parent = &object3ds[i - 1];
 				//親オブジェクトの９割の大きさ
 				object3ds[i].scale = { 0.9f,0.9f,0.9f };
 				//親オブジェクトに対してz軸周りに３０度回転
@@ -422,28 +413,26 @@ void Mesh::Mesh_Update(BYTE key[])
 {
 
 #pragma region カメラの処理
+
 	if (key[DIK_D] || key[DIK_A])
 	{
-		if (key[DIK_D]) { angle_x += XMConvertToRadians(1.0f); }
-		else if (key[DIK_A]) { angle_x -= XMConvertToRadians(1.0f); }
-
-		// angleラジアンだけｙ軸周りに回転。半径はー１００
-		eye.x = -100 * sinf(angle_x);
-		eye.z = -100 * cosf(angle_x);
-
-		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+		if (key[DIK_D]) { angle.x -= XMConvertToRadians(1.0f); }
+		else if (key[DIK_A]) { angle.x += XMConvertToRadians(1.0f); }
 	}
-
 	if (key[DIK_W] || key[DIK_S])
 	{
-		if (key[DIK_W]) { angle_y += XMConvertToRadians(1.0f); }
-		else if (key[DIK_S]) { angle_y -= XMConvertToRadians(1.0f); }
-
-		eye.y = -100 * sinf(angle_y);
-		eye.z = -100 * cosf(angle_y);
-
-		matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+		if (key[DIK_W]) { angle.y += XMConvertToRadians(1.0f); }
+		else if (key[DIK_S]) { angle.y -= XMConvertToRadians(1.0f); }
 	}
+
+	eye.x = dis * cosf(angle.x) * cosf(angle.y);
+	eye.y = -dis * sinf(angle.y);
+	eye.z = dis * sinf(angle.x) * cosf(angle.y);
+
+	up.y = cosf(angle.y);
+
+	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+
 #pragma endregion
 
 #pragma region 移動系処理
@@ -451,6 +440,7 @@ void Mesh::Mesh_Update(BYTE key[])
 	//いずれかのキーを押していたら親だけ動く
 	if (key[DIK_UP] || key[DIK_DOWN] || key[DIK_RIGHT] || key[DIK_LEFT])
 	{
+
 		//座標を移動する処理
 		if (key[DIK_UP]) { object3ds[0].position.y += 1.0f; }
 		else if (key[DIK_DOWN]) { object3ds[0].position.y -= 1.0f; }
@@ -458,6 +448,18 @@ void Mesh::Mesh_Update(BYTE key[])
 		else if (key[DIK_LEFT]) { object3ds[0].position.x -= 1.0f; }
 	}
 
+	if (key[DIK_R] || key[DIK_T])
+	{
+		// 回転する処理Y軸
+		if (key[DIK_R]) { object3ds[0].rotation.y += 0.05f; }
+		else if (key[DIK_T]) { object3ds[0].rotation.y -= 0.05f; }
+	}
+	if (key[DIK_F] || key[DIK_G])
+	{
+		// 回転する処理
+		if (key[DIK_F]) { object3ds[0].rotation.z += 0.1f; }
+		else if (key[DIK_G]) { object3ds[0].rotation.z -= 0.1f; }
+	}
 	//行列の合成
 	for (size_t i = 0; i < _countof(object3ds); i++)
 	{
@@ -476,23 +478,21 @@ void Mesh::Mesh_Update(BYTE key[])
 #pragma endregion
 
 #pragma region 色の切り替え処理
-	if (R <= 1 && R > 0)
-	{
-		R -= 0.01;
-		if (R <= 0) { R = 1; }
-	}
-	else if (G <= 1 && G > 0)
-	{
-		G -= 0.01;
-		if (G <= 0) { G = 1; }
-	}
-	else if (B <= 1 && B > 0)
-	{
-		B -= 0.01;
-		if (B <= 0) { B = 1; }
-	}
+	float speed = 0.01;
 
-	constMapMaterial->color = XMFLOAT4(R, G, B, 0.5);
+	if (R >= 1 && B <= 0) { R = 1;  B = 0; G += speed; }
+	if (G >= 1 && B <= 0) { G = 1;  B = 0; R -= speed; }
+	if (R <= 0 && G >= 1) { R = 0;  G = 1; B += speed; }
+	if (R <= 0 && B >= 1) { R = 0;  B = 1; G -= speed; }
+	if (G <= 0 && B >= 1) { G = 0;  B = 1; R += speed; }
+	if (R >= 1 && G <= 0) { R = 1;  G = 0; B -= speed; }
+
+	if (A >= 1) annihilation_flag = true;
+	if (A <= 0) annihilation_flag = false;
+	if (annihilation_flag == true) A -= speed;
+	if (annihilation_flag == false) A += speed;
+
+	constMapMaterial->color = XMFLOAT4(R, G, B, A);
 #pragma endregion
 
 }

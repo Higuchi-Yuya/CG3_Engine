@@ -12,9 +12,10 @@ using namespace DirectX;
 
 class Mesh
 {
+
 public:
 	template <class T>using ComPtr = Microsoft::WRL::ComPtr<T>;
-
+	
 	// 頂点データ構造体
 	struct Vertex
 	{
@@ -33,6 +34,10 @@ public:
 		XMMATRIX mat; // 3D変換行列
 	};
 
+	// 定数バッファ用データ構造体（マテリアル）
+	struct ConstBufferDataMaterial {
+		XMFLOAT4 color; // 色 (RGBA)
+	};
 	struct Object3d
 	{
 		//定数バッファ (行列用)
@@ -53,14 +58,21 @@ public:
 		Object3d* parent = nullptr;
 	};
 
-	
+	//投影行列
+	static XMMATRIX matProjection;
+
+	//ビュー変換行列
+	static XMMATRIX matView;
+	XMFLOAT3 eye = { 0, 0, -100 };  //視点座標
+	XMFLOAT3 target = { 0, 0, 0 };  //注視点座標
+	XMFLOAT3 up = { 0, 1, 0 };      //上方向ベクトル
 
 public:
 	Mesh();
 
 	~Mesh();
 
-	void Mesh_Initialization(ID3D12Device* device,Vertex *vertices_, unsigned short *indices_, int vertices_count, int device_count);
+	void Mesh_Initialization(ID3D12Device* device,Vertex *vertices, unsigned short *indices, int vertices_count, int indices_count);
 
 	void Mesh_Update(BYTE key[]);
 
@@ -72,7 +84,7 @@ public:
 
 	void DrawObject3d(Object3d* object, ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW& vdView, D3D12_INDEX_BUFFER_VIEW& ibView, UINT numIndices);
 
-	void Mesh_InitializeLine_Line(ID3D12Device* device, Vertex2* vertices_, int vertices_count);
+	void Mesh_InitializeLine_Line(ID3D12Device* device, Vertex2* vertices, int vertices_count);
 
 	void Mesh_Draw_Line(int indices_count, ID3D12GraphicsCommandList* commandList);
 
@@ -83,13 +95,11 @@ private:
 private:
 	HRESULT result;
 
-	// 定数バッファ用データ構造体（マテリアル）
-	struct ConstBufferDataMaterial {
-		XMFLOAT4 color; // 色 (RGBA)
-	};
 
-	float R = 1.0f, G = 1.0f, B = 1.0f;
 
+	float R = 1.0f, G = 0.0f, B = 0.0f ,A = 1.0f;
+
+	bool annihilation_flag = false;
 
 	ConstBufferDataMaterial* constMapMaterial = nullptr;
 
@@ -123,6 +133,7 @@ private:
 	// インデックスバッファ
 	ComPtr<ID3D12Resource> indexBuff = nullptr;
 
+
 	//ワールド変換行列 0番
 	XMMATRIX matWorld;
 	XMMATRIX matScale;
@@ -135,18 +146,13 @@ private:
 	XMMATRIX matRot1;
 	XMMATRIX matTrans1;
 
-	//投影行列
-	XMMATRIX matProjection;
 
-	//ビュー変換行列
-	XMMATRIX matView;
-	XMFLOAT3 eye = { 0, 0, -100 };  //視点座標
-	XMFLOAT3 target = { 0, 0, 0 };  //注視点座標
-	XMFLOAT3 up = { 0, 1, 0 };      //上方向ベクトル
+
+	// カメラの距離
+	float dis = 100.0f;
 
 	//角度
-	float angle_x = 0.0f;
-	float angle_y = 0.0f;
+	XMFLOAT3 angle = { 0,0,0 };
 
 	UINT incrementSize;
 
