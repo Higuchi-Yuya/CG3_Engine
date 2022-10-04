@@ -460,6 +460,14 @@ void Mesh::Mesh_Update(BYTE key[])
 		if (key[DIK_F]) { object3ds[0].rotation.z += 0.1f; }
 		else if (key[DIK_G]) { object3ds[0].rotation.z -= 0.1f; }
 	}
+
+	if (key[DIK_V] || key[DIK_B])
+	{
+		// ‰ñ“]‚·‚éˆ—
+		if (key[DIK_V]) { object3ds[0].rotation.x += 0.05f; }
+		else if (key[DIK_B]) { object3ds[0].rotation.x -= 0.05f; }
+	}
+
 	//s—ñ‚Ì‡¬
 	for (size_t i = 0; i < _countof(object3ds); i++)
 	{
