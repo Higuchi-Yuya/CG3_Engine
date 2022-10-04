@@ -9,7 +9,7 @@
 
 #include <wrl.h>
 using namespace DirectX;
-
+#include"Input.h"
 class Mesh
 {
 
@@ -74,7 +74,7 @@ public:
 
 	void Mesh_Initialization(ID3D12Device* device,Vertex *vertices, unsigned short *indices, int vertices_count, int indices_count);
 
-	void Mesh_Update(BYTE key[]);
+	void Mesh_Update(Input *input);
 
 	void Mesh_Draw(ID3D12Device* device, int indices_count, ID3D12GraphicsCommandList* commandList);
 
@@ -152,7 +152,7 @@ private:
 	float dis = 100.0f;
 
 	//Šp“x
-	XMFLOAT3 angle = { 0,0,0 };
+	XMFLOAT3 angle = { -1.5708f,0,0 };
 
 	UINT incrementSize;
 

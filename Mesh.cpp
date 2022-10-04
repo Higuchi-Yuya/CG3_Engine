@@ -3,6 +3,7 @@
 #include <dinput.h>
 #include "Texture.h"
 
+
 // ウィンドウ横幅
 static const int window_width = 1280;
 
@@ -409,20 +410,20 @@ void Mesh::Mesh_Initialization(ID3D12Device* device, Vertex* vertices, unsigned 
 
 }
 
-void Mesh::Mesh_Update(BYTE key[])
+void Mesh::Mesh_Update(Input *input)
 {
 
 #pragma region カメラの処理
 
-	if (key[DIK_D] || key[DIK_A])
+	if (input->PushKey(DIK_D) || input->PushKey(DIK_A))
 	{
-		if (key[DIK_D]) { angle.x -= XMConvertToRadians(1.0f); }
-		else if (key[DIK_A]) { angle.x += XMConvertToRadians(1.0f); }
+		if (input->PushKey(DIK_D)) { angle.x -= XMConvertToRadians(1.0f); }
+		else if (input->PushKey(DIK_A)) { angle.x += XMConvertToRadians(1.0f); }
 	}
-	if (key[DIK_W] || key[DIK_S])
+	if (input->PushKey(DIK_W) || input->PushKey(DIK_S))
 	{
-		if (key[DIK_W]) { angle.y += XMConvertToRadians(1.0f); }
-		else if (key[DIK_S]) { angle.y -= XMConvertToRadians(1.0f); }
+		if (input->PushKey(DIK_W)) { angle.y += XMConvertToRadians(1.0f); }
+		else if (input->PushKey(DIK_S)) { angle.y -= XMConvertToRadians(1.0f); }
 	}
 
 	eye.x = dis * cosf(angle.x) * cosf(angle.y);
@@ -438,34 +439,34 @@ void Mesh::Mesh_Update(BYTE key[])
 #pragma region 移動系処理
 
 	//いずれかのキーを押していたら親だけ動く
-	if (key[DIK_UP] || key[DIK_DOWN] || key[DIK_RIGHT] || key[DIK_LEFT])
+	if (input->PushKey(DIK_UP) || input->PushKey(DIK_DOWN) || input->PushKey(DIK_RIGHT) || input->PushKey(DIK_LEFT))
 	{
 
 		//座標を移動する処理
-		if (key[DIK_UP]) { object3ds[0].position.y += 1.0f; }
-		else if (key[DIK_DOWN]) { object3ds[0].position.y -= 1.0f; }
-		if (key[DIK_RIGHT]) { object3ds[0].position.x += 1.0f; }
-		else if (key[DIK_LEFT]) { object3ds[0].position.x -= 1.0f; }
+		if (input->PushKey(DIK_UP)) { object3ds[0].position.y += 1.0f; }
+		else if (input->PushKey(DIK_DOWN)) { object3ds[0].position.y -= 1.0f; }
+		if (input->PushKey(DIK_RIGHT)) { object3ds[0].position.x += 1.0f; }
+		else if (input->PushKey(DIK_LEFT)) { object3ds[0].position.x -= 1.0f; }
 	}
 
-	if (key[DIK_R] || key[DIK_T])
+	if (input->PushKey(DIK_R) || input->PushKey(DIK_T))
 	{
 		// 回転する処理Y軸
-		if (key[DIK_R]) { object3ds[0].rotation.y += 0.05f; }
-		else if (key[DIK_T]) { object3ds[0].rotation.y -= 0.05f; }
+		if (input->PushKey(DIK_R)) { object3ds[0].rotation.y += 0.05f; }
+		else if (input->PushKey(DIK_T)) { object3ds[0].rotation.y -= 0.05f; }
 	}
-	if (key[DIK_F] || key[DIK_G])
+	if (input->PushKey(DIK_F) || input->PushKey(DIK_G))
 	{
 		// 回転する処理
-		if (key[DIK_F]) { object3ds[0].rotation.z += 0.1f; }
-		else if (key[DIK_G]) { object3ds[0].rotation.z -= 0.1f; }
+		if (input->PushKey(DIK_F)) { object3ds[0].rotation.z += 0.1f; }
+		else if (input->PushKey(DIK_G)) { object3ds[0].rotation.z -= 0.1f; }
 	}
 
-	if (key[DIK_V] || key[DIK_B])
+	if (input->PushKey(DIK_V) || input->PushKey(DIK_B))
 	{
 		// 回転する処理
-		if (key[DIK_V]) { object3ds[0].rotation.x += 0.05f; }
-		else if (key[DIK_B]) { object3ds[0].rotation.x -= 0.05f; }
+		if (input->PushKey(DIK_V)) { object3ds[0].rotation.x += 0.05f; }
+		else if (input->PushKey(DIK_B)) { object3ds[0].rotation.x -= 0.05f; }
 	}
 
 	//行列の合成
@@ -477,10 +478,10 @@ void Mesh::Mesh_Update(BYTE key[])
 #pragma endregion
 	
 #pragma region 画像切り替え処理
-	if (key[DIK_1]|| key[DIK_2])
+	if (input->PushKey(DIK_1)|| input->PushKey(DIK_2))
 	{
-		if(key[DIK_1]){ srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart(); }
-		if(key[DIK_2]){ srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
+		if(input->PushKey(DIK_1)){ srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart(); }
+		if(input->PushKey(DIK_2)){ srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
 						srvGpuHandle.ptr += incrementSize;}
 	}
 #pragma endregion

@@ -1,7 +1,6 @@
 #pragma region 読み込むヘッダー
 
-#define DIRECTINPUT_VERSION 0x0800 //DirectInputのバージョン指定
-#include<dinput.h>
+
 
 #pragma comment(lib,"d3dcompiler.lib")
 #include<Windows.h>
@@ -12,8 +11,7 @@
 #include<cassert>
 
 #pragma comment(lib,"dxgi.lib")
-#pragma comment(lib,"dinput8.lib")
-#pragma comment(lib,"dxguid.lib")
+
 #include <vector>
 #include <wrl.h>
 
@@ -22,7 +20,7 @@
 #include "Mesh.h"
 
 #include "Render_basic.h"
-
+#include "Input.h"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -248,21 +246,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 
 	result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
-	//DirectInputの初期化
-	IDirectInput8* directInput = nullptr;
-	result = DirectInput8Create(
-		w.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void**)&directInput, nullptr);
-	assert(SUCCEEDED(result));
+	// ポインタ
+	Input* input = nullptr;
 
-	//キーボードデバイスの生成
-	IDirectInputDevice8* keyboard = nullptr;
-	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(result));
-
-	//入力データ形式のセット
-	result = keyboard->SetDataFormat(&c_dfDIKeyboard);//標準形式
-	assert(SUCCEEDED(result));
+	// 入力の初期化
+	input = new Input();
+	input->Initialize(w.hInstance,hwnd);
 
 
 
@@ -582,13 +571,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 		//----------DireceX毎フレーム処理　ここから------------//
 		///////////////////////////////////////////////////
 
-		// キーボード情報の取得開始
-		keyboard->Acquire();
-		// 全キーの入力状態を取得する
-		BYTE key[256] = {};
-		keyboard->GetDeviceState(sizeof(key), key);
+		// 入力の更新
+		input->Update();
+		
 		// 数字の0キーが押されていたら
-		if (key[DIK_0])
+		if (input->PushKey(DIK_0))
 		{
 			OutputDebugStringA("Hit 0\n");  // 出力ウィンドウに「Hit 0」と表示
 		}
@@ -613,7 +600,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 		//3.画面クリア			R	  G	   B	A
 		FLOAT clearColor[] = { 0.1f,0.25f,0.5f,0.0f };//青っぽい色
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-		if (key[DIK_SPACE])     // スペースキーが押されていたら
+		if (input->PushKey(DIK_SPACE))     // スペースキーが押されていたら
 		{
 			//画面クリアカラーの数値を書き換える
 			FLOAT clearColor[] = { 11.1f,0.25f, 0.5f,0.0f }; // ピンクっぽい色
@@ -626,15 +613,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 		//bool キーを押した瞬間か(uint8_t キー番号);
 		//bool キーを離した瞬間か(uint8_t キー番号);
 
-		// キーボード情報の取得開始
-		keyboard->Acquire();
-
-		// 全キーの入力状態を取得する
-
-		keyboard->GetDeviceState(sizeof(key), key);
 
 
-		mesh->Mesh_Update(key);
+
+		mesh->Mesh_Update(input);
+
 		for (int i = 0; i < 20; i++)
 		{
 			line[i].Line_Updata();
@@ -800,7 +783,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 
 	//もうクラスは使わないので登録を解除する
 	UnregisterClass(w.lpszClassName, w.hInstance);
-
+	delete input;
 #pragma endregion
 
 	Render_basic::DestroyInstance();
