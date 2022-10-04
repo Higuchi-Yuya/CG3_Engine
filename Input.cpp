@@ -60,3 +60,14 @@ bool Input::TriggerKey(BYTE keyNumber)
 	// そうでなければfalseを返す
 	return false;
 }
+
+bool Input::ReleasedKey(BYTE keyNumber)
+{
+	// 指定キーを前フレームで押していて、今のフレームで押していなければtrueを返す
+	if (keyPre[keyNumber] && !key[keyNumber]) {
+		return true;
+	}
+
+	// そうでなければfalseを返す
+	return false;
+}

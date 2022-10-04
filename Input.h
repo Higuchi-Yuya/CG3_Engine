@@ -17,23 +17,25 @@ public: // メンバ関数
 	void Update();
 
 	/// <summary>
-	/// キーの押したかをチェック
+	/// キーの押したかをチェック(長押し)
 	/// </summary>
 	/// <param name="keyNumber">キー番号(DIK_0 等)</param>
 	/// <returns>押されているか</returns>
 	bool PushKey(BYTE keyNumber);
 
 	/// <summary>
-	/// キーのトリガーをチェック
+	/// キーのトリガーをチェック(押した瞬間)
 	/// </summary>
 	/// <param name="keyNumber">キー番号(DIK_0 等)</param>
 	/// <returns>トリガーか</returns>
 	bool TriggerKey(BYTE keyNumber);
 
 	/// <summary>
-	/// キーの情報を外側に渡す
+	/// キーのトリガーをチェック(離した瞬間)
 	/// </summary>
-	//BYTE GetKey() { return *key; }
+	/// <param name="keyNumber">キー番号(DIK_0 等)</param>
+	/// <returns>トリガーか</returns>
+	bool ReleasedKey(BYTE keyNumber);
 
 private:// 静的メンバ変数
 
