@@ -5,7 +5,6 @@
 
 #include <cassert>
 
-
 void Input::Initialize(WinApp* winApp)
 {
 	HRESULT result;
