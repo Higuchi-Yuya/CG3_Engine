@@ -122,6 +122,12 @@ void DirectXCommon::PostDraw()
 	commandQueue->ExecuteCommandLists(1, commandLists);
 #pragma endregion
 	
+#pragma region 画面フリップ
+	//画面に表示するバッファをフリップ(裏表の入れ替え)
+	result = swapChain->Present(1, 0);
+	assert(SUCCEEDED(result));
+#pragma endregion
+
 #pragma region コマンド完了待ち
 	//コマンドの実行完了を待つ
 	commandQueue->Signal(fence.Get(), ++fenceVal);
@@ -152,12 +158,17 @@ void DirectXCommon::PostDraw()
 	assert(SUCCEEDED(result));
 #pragma endregion
 
-#pragma region 画面フリップ
-	//画面に表示するバッファをフリップ(裏表の入れ替え)
-	result = swapChain->Present(1, 0);
-	assert(SUCCEEDED(result));
-#pragma endregion
 
+
+}
+
+void DirectXCommon::ClearDepthBuffer()
+{
+	// 深度ステンシルビュー用デスクリプタヒープのハンドルを取得
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvH =
+		CD3DX12_CPU_DESCRIPTOR_HANDLE(dsvHeap->GetCPUDescriptorHandleForHeapStart());
+	// 深度バッファのクリア
+	commandList->ClearDepthStencilView(dsvH, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
 void DirectXCommon::InitalizeDevice()

@@ -17,12 +17,17 @@ public:// メンバ関数
 	// 描画後処理
 	void PostDraw();
 
+	/// <summary>
+	/// 深度バッファのクリア
+	/// </summary>
+	void ClearDepthBuffer();
+
 	// デバイス取得
 	ID3D12Device* GetDevice() const { return device.Get();}
 
 	// コマンドリスト取得
 	ID3D12GraphicsCommandList* GetCommandList()const { return commandList.Get(); }
-
+	
 private:
 	// デバイスの初期化
 	void InitalizeDevice();

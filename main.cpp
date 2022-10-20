@@ -15,6 +15,7 @@
 #include "Input.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include "Sprite.h"
 using namespace Microsoft::WRL;
 using namespace std;
 
@@ -71,10 +72,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 	input = new Input();
 	input->Initialize(winApp);
 
+	// スプライトの初期化
+	Sprite::StaticInitialize(dxCommon->GetDevice(), WinApp::window_width, WinApp::window_height);
+	
 	/////////////////////////////////////////////////////////
 	//--------------DirectX12初期化処理　ここまで-------------//
 	///////////////////////////////////////////////////////
 #pragma endregion
+
+
+	Sprite* sprite = nullptr;
+
+	Sprite::LoadTexture(2, L"Resources/texture.png");
+	sprite = Sprite::Create(2, { 500,500 }, { 1,0,0,1 }, { 0,0 }, false, false);
 
 	Render_basic::GetInstance()->Initialization(dxCommon->GetDevice());
 	
@@ -455,26 +465,51 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 
 		//4.描画コマンドここから
 		dxCommon->PreDraw();
+		// 描画前処理
+		Sprite::PreDraw(dxCommon->GetCommandList());
+
+		// 描画後処理
+		Sprite::PostDraw();
+		//// 深度バッファクリア
+		//dxCommon->ClearDepthBuffer();
 		//Meshの描画--------------------------------------------------------------//
 		
 		mesh[0].Mesh_Draw(dxCommon->GetDevice(), indices_count, dxCommon->GetCommandList());
-		
-		for (int i = 0; i < 20; i++)
-		{
-			line[i].Line_Draw(indices_count2, dxCommon->GetCommandList());
-		}
+		//
+		//for (int i = 0; i < 20; i++)
+		//{
+		//	line[i].Line_Draw(indices_count2, dxCommon->GetCommandList());
+		//}
 		//4.描画コマンドここまで
+		
+#pragma region 前景スプライト描画
+// 描画前処理
+		Sprite::PreDraw(dxCommon->GetCommandList());
 
+		sprite->Draw();
+
+		// 描画後処理
+		Sprite::PostDraw();
 #pragma endregion
+
+
+		
 
 #pragma region 画面入れ替え
 		dxCommon->PostDraw();
 #pragma endregion
+
+
+#pragma endregion
+
+
+
+
 	}
 #pragma region  WindowsAPI後始末
 
 	//もうクラスは使わないので登録を解除する
-
+	delete sprite;
 	// 入力解放
 	delete input;
 
