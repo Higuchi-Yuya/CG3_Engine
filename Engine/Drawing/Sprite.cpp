@@ -36,9 +36,10 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 	ComPtr<ID3DBlob> psBlob;	// ピクセルシェーダオブジェクト
 	ComPtr<ID3DBlob> errorBlob; // エラーオブジェクト
 
+#pragma region 頂点シェーダーの読み込みとコンパイル
 	// 頂点シェーダの読み込みとコンパイル
 	result = D3DCompileFromFile(
-		L"Resources/shaders/SpriteVS.hlsl",	// シェーダファイル名
+		L"Resources/shaders/SpriteVertexShader.hlsl",	// シェーダファイル名
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
 		"main", "vs_5_0",	// エントリーポイント名、シェーダーモデル指定
@@ -60,9 +61,12 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 		assert(0);
 	}
 
+#pragma endregion
+
+#pragma region ピクセルシェーダーの読み込みとコンパイル
 	// ピクセルシェーダの読み込みとコンパイル
 	result = D3DCompileFromFile(
-		L"Resources/shaders/SpritePS.hlsl",	// シェーダファイル名
+		L"Resources/shaders/SpritePixelShader.hlsl",	// シェーダファイル名
 		nullptr,
 		D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
 		"main", "ps_5_0",	// エントリーポイント名、シェーダーモデル指定
@@ -83,7 +87,9 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 
 		assert(0);
 	}
+#pragma endregion
 
+#pragma region 頂点レイアウトの設定
 	// 頂点レイアウト
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 		{ // xy座標(1行で書いたほうが見やすい)
@@ -97,7 +103,9 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
 		},
 	};
+#pragma endregion
 
+#pragma region パイプラインステートの設定
 	// グラフィックスパイプラインの流れを設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpipeline{};
 	gpipeline.VS = CD3DX12_SHADER_BYTECODE(vsBlob.Get());
@@ -112,9 +120,13 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 	gpipeline.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	gpipeline.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS; // 常に上書きルール
 
+#pragma endregion
+
+#pragma region レンダーターゲットのブレンド設定
 	// レンダーターゲットのブレンド設定
 	D3D12_RENDER_TARGET_BLEND_DESC blenddesc{};
 	blenddesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;	// RBGA全てのチャンネルを描画
+
 	blenddesc.BlendEnable = true;
 	blenddesc.BlendOp = D3D12_BLEND_OP_ADD;
 	blenddesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
@@ -123,7 +135,9 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 	blenddesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blenddesc.SrcBlendAlpha = D3D12_BLEND_ONE;
 	blenddesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+#pragma endregion
 
+#pragma region パイプラインのそのほかの設定
 	// ブレンドステートの設定
 	gpipeline.BlendState.RenderTarget[0] = blenddesc;
 
@@ -144,7 +158,9 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 	// デスクリプタレンジ
 	CD3DX12_DESCRIPTOR_RANGE descRangeSRV;
 	descRangeSRV.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0 レジスタ
+#pragma endregion
 
+#pragma region ルートパラメーターの設定
 	// ルートパラメータ
 	CD3DX12_ROOT_PARAMETER rootparams[2];
 	rootparams[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
@@ -152,8 +168,10 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 
 	// スタティックサンプラー
 	CD3DX12_STATIC_SAMPLER_DESC samplerDesc = CD3DX12_STATIC_SAMPLER_DESC(0, D3D12_FILTER_MIN_MAG_MIP_POINT); // s0 レジスタ
+#pragma endregion
 
-	// ルートシグネチャの設定
+#pragma region ルートシグネチャの設定および生成
+		// ルートシグネチャの設定
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init_1_0(_countof(rootparams), rootparams, 1, &samplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -167,7 +185,9 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 	assert(SUCCEEDED(result));
 
 	gpipeline.pRootSignature = rootSignature.Get();
+#pragma endregion
 
+#pragma region グラフィックスパイプラインの生成 デスクリプタヒープの生成
 	// グラフィックスパイプラインの生成
 	result = device->CreateGraphicsPipelineState(&gpipeline, IID_PPV_ARGS(&pipelineState));
 	assert(SUCCEEDED(result));
@@ -185,6 +205,7 @@ void Sprite::StaticInitialize(ID3D12Device* device, int window_width, int window
 	descHeapDesc.NumDescriptors = srvCount;
 	result = device->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&descHeap));//生成
 	assert(SUCCEEDED(result));
+#pragma endregion
 
 }
 
@@ -330,6 +351,7 @@ bool Sprite::Initialize()
 
 	HRESULT result = S_FALSE;
 
+#pragma region 頂点バッファ周り
 	// ヒーププロパティ
 	CD3DX12_HEAP_PROPERTIES heapPropsVertexBuffer = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	// リソース設定
@@ -349,7 +371,9 @@ bool Sprite::Initialize()
 	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
 	vbView.SizeInBytes = sizeof(VertexPosUv) * 4;
 	vbView.StrideInBytes = sizeof(VertexPosUv);
+#pragma endregion
 
+#pragma region 定数バッファ周り
 	// ヒーププロパティ
 	CD3DX12_HEAP_PROPERTIES heapPropsConstantBuffer = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	// リソース設定
@@ -370,7 +394,9 @@ bool Sprite::Initialize()
 		constMap->mat = matProjection;
 		constBuff->Unmap(0, nullptr);
 	}
+#pragma endregion
 
+	// 特に問題なければtrueを返す
 	return true;
 }
 
@@ -429,6 +455,11 @@ void Sprite::SetTextureRect(const XMFLOAT2& texBase, const XMFLOAT2& texSize)
 
 	// 頂点バッファへのデータ転送
 	TransferVertices();
+}
+
+void Sprite::SetColor(const XMFLOAT4& color)
+{
+	this->color = color;
 }
 
 void Sprite::Draw()

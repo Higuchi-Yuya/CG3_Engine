@@ -84,7 +84,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 	Sprite* sprite = nullptr;
 
 	Sprite::LoadTexture(2, L"Resources/texture.png");
-	sprite = Sprite::Create(2, { 500,500 }, { 1,0,0,1 }, { 0,0 }, false, false);
+	sprite = Sprite::Create(2, { 500,200 }, { 1,1,1,1 }, { 0,0 }, false, false);
 
 	Render_basic::GetInstance()->Initialization(dxCommon->GetDevice());
 	
@@ -467,11 +467,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 		dxCommon->PreDraw();
 		// 描画前処理
 		Sprite::PreDraw(dxCommon->GetCommandList());
-
+		sprite->Draw();
 		// 描画後処理
 		Sprite::PostDraw();
 		//// 深度バッファクリア
-		//dxCommon->ClearDepthBuffer();
+		dxCommon->ClearDepthBuffer();
 		//Meshの描画--------------------------------------------------------------//
 		
 		mesh[0].Mesh_Draw(dxCommon->GetDevice(), indices_count, dxCommon->GetCommandList());
@@ -486,7 +486,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR,  _In_ int) {
 // 描画前処理
 		Sprite::PreDraw(dxCommon->GetCommandList());
 
-		sprite->Draw();
+		
 
 		// 描画後処理
 		Sprite::PostDraw();

@@ -42,15 +42,6 @@ Vector3 Vector3::cross(const Vector3& v) const
 	);
 }
 
-Vector3 Vector3::cross2(const Vector3& v, const Vector3& v2)
-{
-	return Vector3(
-		v.y * v2.z - v.z * v2.y,
-		v.z * v2.x - v.x * v2.z,
-		v.x * v2.y - v.y * v2.x
-	);
-}
-
 Vector3 Vector3::distanceFrom(const Vector3& v, const Vector3& v2) const
 {
 	return  Vector3(

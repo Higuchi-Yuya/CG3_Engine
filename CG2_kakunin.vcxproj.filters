@@ -16,73 +16,145 @@
     <Filter Include="シェーダーファイル">
       <UniqueIdentifier>{01f59c4c-f0d4-4067-814e-1966bf673e16}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Engine">
+      <UniqueIdentifier>{fdc8f65e-b91a-4948-8a7e-5e4a487e3d88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engine\Camera">
+      <UniqueIdentifier>{8648591c-647f-4436-a2dd-13301915fca6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Engine">
+      <UniqueIdentifier>{3e9fda3e-31c2-4cca-8e74-e27550a30bd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Engine\Camera">
+      <UniqueIdentifier>{5ce11703-8856-41ab-ba6d-370267de2542}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engine\DirectXBase">
+      <UniqueIdentifier>{201f598d-437a-4dfa-bc77-0b86f898e5f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Engine\DirectXBase">
+      <UniqueIdentifier>{8be3e7bb-e7e8-431b-8398-f56173d17422}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Engine\Drawing">
+      <UniqueIdentifier>{aafce6cf-a48d-49bf-8a4e-49d5ac4ff375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engine\Drawing">
+      <UniqueIdentifier>{bb2bc4d3-8747-4b1d-8030-67b575f3b68a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engine\Input">
+      <UniqueIdentifier>{2dc98693-546d-4744-aae9-e34f7d00031a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Engine\Input">
+      <UniqueIdentifier>{3b4c1d7a-ba9e-48e2-8519-2b3224b518f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Engine\Math">
+      <UniqueIdentifier>{d3c235de-e792-4edd-a2cb-9deaf386c190}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engine\Math">
+      <UniqueIdentifier>{b6005b18-bacf-4da5-b4e0-b512e1819681}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Engine\Sound">
+      <UniqueIdentifier>{3f03f781-4702-4e29-95df-5867f5f505d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Engine\Sound">
+      <UniqueIdentifier>{772d8c7c-e317-4b06-9526-79454d92d508}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\Camera\ViewProjection.cpp">
+      <Filter>ソース ファイル\Engine\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="Render_basic.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\DirectXBase\DirectXCommon.cpp">
+      <Filter>ソース ファイル\Engine\DirectXBase</Filter>
     </ClCompile>
-    <ClCompile Include="Vector3.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\DirectXBase\Render_basic.cpp">
+      <Filter>ソース ファイル\Engine\DirectXBase</Filter>
     </ClCompile>
-    <ClCompile Include="Line.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\DirectXBase\WinApp.cpp">
+      <Filter>ソース ファイル\Engine\DirectXBase</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\Drawing\Line.cpp">
+      <Filter>ソース ファイル\Engine\Drawing</Filter>
     </ClCompile>
-    <ClCompile Include="Input.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\Drawing\Mesh.cpp">
+      <Filter>ソース ファイル\Engine\Drawing</Filter>
     </ClCompile>
-    <ClCompile Include="WinApp.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\Drawing\Sprite.cpp">
+      <Filter>ソース ファイル\Engine\Drawing</Filter>
     </ClCompile>
-    <ClCompile Include="Sprite.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\Drawing\Texture.cpp">
+      <Filter>ソース ファイル\Engine\Drawing</Filter>
     </ClCompile>
-    <ClCompile Include="DirectXCommon.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\Input\Input.cpp">
+      <Filter>ソース ファイル\Engine\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Math\Vector3.cpp">
+      <Filter>ソース ファイル\Engine\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Sound\Audio.cpp">
+      <Filter>ソース ファイル\Engine\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Math\Vector4.cpp">
+      <Filter>ソース ファイル\Engine\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Math\Vector2.cpp">
+      <Filter>ソース ファイル\Engine\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Math\Matrix4.cpp">
+      <Filter>ソース ファイル\Engine\Math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Mesh.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\Camera\ViewProjection.h">
+      <Filter>ヘッダー ファイル\Engine\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="Render_basic.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\DirectXBase\DirectXCommon.h">
+      <Filter>ヘッダー ファイル\Engine\DirectXBase</Filter>
     </ClInclude>
-    <ClInclude Include="Vector3.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\DirectXBase\Render_basic.h">
+      <Filter>ヘッダー ファイル\Engine\DirectXBase</Filter>
     </ClInclude>
-    <ClInclude Include="Line.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\DirectXBase\WinApp.h">
+      <Filter>ヘッダー ファイル\Engine\DirectXBase</Filter>
     </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\Drawing\Line.h">
+      <Filter>ヘッダー ファイル\Engine\Drawing</Filter>
     </ClInclude>
-    <ClInclude Include="Input.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\Drawing\Mesh.h">
+      <Filter>ヘッダー ファイル\Engine\Drawing</Filter>
     </ClInclude>
-    <ClInclude Include="WinApp.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\Drawing\Sprite.h">
+      <Filter>ヘッダー ファイル\Engine\Drawing</Filter>
     </ClInclude>
-    <ClInclude Include="Sprite.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\Drawing\Texture.h">
+      <Filter>ヘッダー ファイル\Engine\Drawing</Filter>
     </ClInclude>
-    <ClInclude Include="DirectXCommon.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\Input\Input.h">
+      <Filter>ヘッダー ファイル\Engine\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Math\Vector3.h">
+      <Filter>ヘッダー ファイル\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Sound\Audio.h">
+      <Filter>ヘッダー ファイル\Engine\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Math\Vector2.h">
+      <Filter>ヘッダー ファイル\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Math\Vector4.h">
+      <Filter>ヘッダー ファイル\Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Math\Matrix4.h">
+      <Filter>ヘッダー ファイル\Engine\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\Basic.hlsli">
       <Filter>シェーダーファイル</Filter>
     </None>
-    <None Include="SpriteShaderHeader.hlsli">
+    <None Include="Resources\shaders\SpriteShaderHeader.hlsli">
       <Filter>シェーダーファイル</Filter>
     </None>
   </ItemGroup>
@@ -93,10 +165,10 @@
     <FxCompile Include="Resources\shaders\BasicVS.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
-    <FxCompile Include="SpritePixelShader.hlsl">
+    <FxCompile Include="Resources\shaders\SpritePixelShader.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
-    <FxCompile Include="SpriteVertexShader.hlsl">
+    <FxCompile Include="Resources\shaders\SpriteVertexShader.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
   </ItemGroup>

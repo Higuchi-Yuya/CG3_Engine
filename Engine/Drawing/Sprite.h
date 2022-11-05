@@ -158,38 +158,55 @@ public: // メンバ関数
 	/// <param name="texSize">テクスチャサイズ</param>
 	void SetTextureRect(const XMFLOAT2& texBase, const XMFLOAT2& texSize);
 
+	// 色のセット
+	void SetColor(const XMFLOAT4& color);
+
 	/// <summary>
 	/// 描画
 	/// </summary>
 	void Draw();
 
 private: // メンバ変数
+	
 	// 頂点バッファ
 	ComPtr<ID3D12Resource> vertBuff;
+	
 	// 定数バッファ
 	ComPtr<ID3D12Resource> constBuff;
+	
 	// 頂点バッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vbView{};
+	
 	// テクスチャ番号
 	UINT texNumber = 0;
+	
 	// Z軸回りの回転角
 	float rotation = 0.0f;
+	
 	// 座標
 	XMFLOAT2 position{};
+	
 	// スプライト幅、高さ
 	XMFLOAT2 size = { 100.0f, 100.0f };
+	
 	// アンカーポイント
 	XMFLOAT2 anchorpoint = { 0, 0 };
+	
 	// ワールド行列
 	XMMATRIX matWorld{};
+	
 	// 色
 	XMFLOAT4 color = { 1, 1, 1, 1 };
+	
 	// 左右反転
 	bool isFlipX = false;
+	
 	// 上下反転
 	bool isFlipY = false;
+	
 	// テクスチャ始点
 	XMFLOAT2 texBase = { 0, 0 };
+
 	// テクスチャ幅、高さ
 	XMFLOAT2 texSize = { 100.0f, 100.0f };
 
